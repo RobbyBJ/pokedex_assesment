@@ -50,7 +50,7 @@ export default function PokemonGrid() {
         />
       </div>
 
-      <div className="p-4 bg-gray-50 relative rounded-b-xl">
+      <div className="p-4 bg-gray-50 relative rounded-b-xl overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-64 text-gray-500 font-semibold">
             Loading Pokemon data...

@@ -27,7 +27,6 @@ class PokemonController extends Controller
         $formattedData = [];
 
         foreach ($results as $pokemon) {
-            
     
             $detailResponse = Http::get($pokemon['url']);
 
