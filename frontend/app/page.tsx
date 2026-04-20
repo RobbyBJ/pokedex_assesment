@@ -8,7 +8,7 @@ export default function Home() {
         <img 
           src="pokeball.png" 
           alt="pokeball" 
-          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14  animate-bounce"
+          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 animate-bounce"
         />
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-center">
           Pokedex

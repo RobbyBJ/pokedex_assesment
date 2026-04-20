@@ -6,10 +6,13 @@ import PokemonCard, { Pokemon } from './PokemonCard';
 export default function PokemonGrid() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Pokemon[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
+  // Fetch paginated Pokemon list
   useEffect(() => {
     async function fetchPokemons() {
       try {
@@ -32,9 +35,36 @@ export default function PokemonGrid() {
     fetchPokemons();
   }, [page]); 
 
-  const filteredPokemons = pokemons.filter((p) => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Debounced server-side search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/pokemons/search?q=${encodeURIComponent(searchQuery.trim())}`
+        );
+        const data = await response.json();
+        setSearchResults(data);
+      } catch (error) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Show search results when searching, otherwise show paginated list
+  const displayedPokemons = searchQuery.trim() ? searchResults : pokemons;
 
   return (
     <div className="flex flex-col">
@@ -43,7 +73,7 @@ export default function PokemonGrid() {
         <h2 className="text-xl font-bold text-gray-700">Pokemon List</h2>
         <input 
           type="text" 
-          placeholder="Search Pokemon..." 
+          placeholder="Search any Pokemon..." 
           className="w-full sm:w-64 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400 transition"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -55,13 +85,23 @@ export default function PokemonGrid() {
           <div className="flex justify-center items-center h-64 text-gray-500 font-semibold">
             Loading Pokemon data...
           </div>
+        ) : isSearching ? (
+          <div className="flex justify-center items-center h-64 text-gray-500 font-semibold">
+            Searching...
+          </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPokemons.map((pokemon, idx) => (
-                <PokemonCard key={`${pokemon.name}-${idx}`} pokemon={pokemon} />
-              ))}
-            </div>
+            {displayedPokemons.length === 0 && searchQuery.trim() ? (
+              <div className="flex justify-center items-center h-64 text-gray-400 font-semibold">
+                No Pokemon found for &ldquo;{searchQuery}&rdquo;
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {displayedPokemons.map((pokemon, idx) => (
+                  <PokemonCard key={`${pokemon.name}-${idx}`} pokemon={pokemon} />
+                ))}
+              </div>
+            )}
 
             {searchQuery === '' && (
               <div className="mt-8 flex justify-center pb-4">
